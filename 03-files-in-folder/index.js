@@ -1,5 +1,4 @@
-const { readdir } = require('fs/promises');
-const { stat } = require('fs');
+const { readdir, stat } = require('fs/promises');
 const path = require('path');
 const { stdout } = process;
 
@@ -10,13 +9,8 @@ async function readDirectory(dirPath) {
     const files = await readdir(dirPath, { withFileTypes: true });
     for (const dirent of files) {
       if (dirent.isFile()) {
-        stat(path.join(folderPath, dirent.name), (error, stats) => {
-          if (error) {
-            stdout.write(`\nError ${error.message}`);
-          } else {
-            stdout.write(`\n${path.parse(dirent.name).name} - ${path.extname(dirent.name).slice(1)} - ${stats.size / 1000}kb`);
-          }
-        });
+        const stats = await stat(path.join(dirPath, dirent.name));
+        stdout.write(`\n${path.parse(dirent.name).name} - ${path.extname(dirent.name).slice(1)} - ${stats.size}bytes`);
       }
     }
   } catch (error) {

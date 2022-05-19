@@ -7,10 +7,10 @@ const sourcePath = path.join(__dirname, 'styles');
 const targetPath = path.join(__dirname, 'project-dist');
 const data = [];
 
-async function createBundle (sourse, target) {
+async function createBundle(sourse, target) {
   try {
     const files = await readdir(sourse, { withFileTypes: true });
-    for await (const file of files) {
+    for (const file of files) {
       const extFile = path.extname(path.join(sourse, file.name));
       if (file.isFile() && extFile === '.css') {
         const input = fs.createReadStream(path.join(sourse, file.name), 'utf-8');
