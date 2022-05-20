@@ -1,6 +1,6 @@
 const path = require('path');
 const { stdout } = process;
-const { readFile, writeFile, readdir, copyFile, rm, mkdir } = require('fs/promises');
+const { readFile, writeFile, readdir, copyFile, rm, mkdir, stat } = require('fs/promises');
 const fs = require('fs');
 
 const distPath = path.join(__dirname, '/project-dist');
@@ -30,16 +30,20 @@ async function writeAndInjectHtmlTemplate(source, target, components) {
 
 async function createBundle(sourse, target) {
   try {
+    const data = [];
     await writeFile(target, '', 'utf8');
     const files = await readdir(sourse, { withFileTypes: true });
     for await (const file of files) {
       const extFile = path.extname(path.join(sourse, file.name));
       if (file.isFile() && extFile === '.css') {
-        const input = fs.createReadStream(path.join(sourse, file.name), 'utf-8');
-        const output = fs.createWriteStream(target, { flags: 'a' });
-        input.pipe(output);
+        const size = await stat(path.join(sourse, file.name));
+        const input = fs.createReadStream(path.join(sourse, file.name), { highWaterMark: size.size }, 'utf-8');
+        for await (const chunk of input) {
+          data.push(chunk);
+        }
       }
     }
+    await writeFile(target, data.join('\n\n'), 'utf8');
   } catch (err) {
     stdout.write(`\nError: ${err.message}\n`);
   }
